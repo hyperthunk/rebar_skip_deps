@@ -23,14 +23,12 @@
 -module(rebar_skip_deps).
 -export([preprocess/2, postprocess/2]).
 
-preprocess(Config, _) ->
-    Cmd = rebar_utils:command_info(current),
+preprocess(_, _) ->
+    Cmd = rebar_commands:current(),
     ExtraCommands = maybe_sanitize_destructive_command(Cmd),
-    %% with a small patch, preprocess can now return one of three values
-    %% {ok, PreDirs}                            -> the current return type
-    %% {ok, PreDirs, NewConfig}                 -> overriding config
-    %% {ok, PreDirs, NewConfig, ExtraCommands}  -> dependant/cascading tasks
-    {ok, [], Config, ExtraCommands}.
+    %% with a small patch, preprocess can now alter the command pipeline
+    [ rebar_commands:enqueue_first(C) || C <- ExtraCommands ],
+    {ok, []}.
 
 postprocess(_, _) ->
     Skip = rebar_config:get_global(prev_skip_setting, undefined),
