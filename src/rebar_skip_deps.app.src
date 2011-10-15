@@ -1,0 +1,9 @@
+{application, rebar_skip_deps,
+ [
+  {description, "Sets skip_deps for all destructive commands"},
+  {vsn, "0.0.1"},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]}
+ ]}.
