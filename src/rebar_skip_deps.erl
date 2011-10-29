@@ -23,45 +23,76 @@
 -module(rebar_skip_deps).
 -export([preprocess/2, postprocess/2]).
 
-preprocess(_, _) ->
-    Cmd = rebar_commands:current(),
-    ExtraCommands = maybe_sanitize_destructive_command(Cmd),
-    %% with a small patch, preprocess can now alter the command pipeline
-    [ rebar_commands:enqueue_first(C) || C <- ExtraCommands ],
-    {ok, []}.
+preprocess(Config, _) ->
+    BaseDir = rebar_config:get_global(base_dir, undefined),
+    rebar_log:log(debug, "Preprocessing...~n", []),
+    Command = rebar_utils:command_info(current),
+    %% Set/Reset skip_deps if explicitly configured to do so
+    case skip_deps_for_command(Command, Config) of
+        true ->
+            rebar_log:log(debug, "Configured to skip_deps for ~p~n",
+                          [Command]),
+            %% using skip_deps doesn't work well, as we then have to
+            %% set/reset skip_dir all over the place - we might as well
+            %% do that to begin with...
+            %% rebar_config:set_global(skip_deps, "true");
 
-postprocess(_, _) ->
-    Skip = rebar_config:get_global(prev_skip_setting, undefined),
-    case Skip of
-        undefined ->
-            ok;
-        Setting ->
-            reset_skip_deps(Setting)
+            %% first we need to skip any *external deps*
+            Deps = rebar_config:get_local(Config, deps, []),
+            [ skip_dir(code:lib_dir(App)) || {App, _Vsn} <- Deps ],
+
+            %% now for the local deps
+            DepsDir = rebar_config:get_global(deps_dir, "deps"),
+            Cwd = rebar_utils:get_cwd(),
+            case file:list_dir(DepsDir) of
+                {ok, Files} ->
+                    [ skip_dir(filename:join([Cwd, DepsDir, F])) ||
+                                                        F <- Files ];
+                _ ->
+                    ok
+            end,
+
+            %% and finally, if the configuration requires it, we skip
+            %% any subdirs that are explicitly requested by the user
+            case rebar_config:get_local(Config, skip_subdirs, []) of
+                [] ->
+                    ok;
+                Subdirs ->
+                    [ skip_dir(Dir) || Dir <- Subdirs ]
+            end;
+        false ->
+            ok
     end,
     {ok, []}.
 
-maybe_sanitize_destructive_command(Command) ->
-    CommandString = atom_to_list(Command),
-    case lists:suffix("-deps", CommandString) of
-        false ->
-            Skip = rebar_config:get_global(skip_deps, false),
-            rebar_config:set_global(prev_skip_setting, Skip),
-            rebar_config:set_global(skip_deps, "true"),
-            %% no extra commands required
-            [];
+postprocess(Config, _) ->
+    rebar_log:log(debug, "Postprocessing...~n", []),
+    Command = rebar_utils:command_info(current),
+    DepsDir = rebar_config:get_global(deps_dir, "deps"),
+    %% Set/Reset skip_deps if explicitly configured to do so
+    case skip_deps_for_command(Command, Config) of
         true ->
-            case lists:member(CommandString,
-                              ["get-deps", "update-deps", "check-deps",
-                               "list-deps", "delete-deps", "install-deps"]) of
-                true ->
-                    [];
-                false ->
-                    Parts = string:tokens(CommandString, "-"),
-                    [_Deps|Rest] = lists:reverse(Parts),
-                    NewCommand = string:join(Rest, "-"),
-                    [NewCommand]
-            end
-    end.
+            case file:list_dir(DepsDir) of
+                {ok, Dirs} ->
+                    %% why is there an API to skip, but not to *unskip* a dir?
+                    [ erlang:erase({skip_dir, D}) || D <- Dirs ];
+                _ ->
+                    ok
+            end;
+        false ->
+            ok
+    end,
+    {ok, []}.
 
-reset_skip_deps(Skip) ->
-    rebar_config:set_global(skip_deps, Skip).
+skip_dir({error, _}) ->
+    ok;
+skip_dir(F) ->
+    rebar_log:log(debug, "Skipping ~s~n", [F]),
+    rebar_core:skip_dir(F).
+
+skip_deps_for_command(Command, Config) ->
+    GlobalSkip = rebar_config:get(Config, skip_dep_cmds, []),
+    rebar_log:log(debug, "Global skip_dep_cmds: ~p~n", [GlobalSkip]),
+    LocalSkip = rebar_config:get_local(Config, skip_dep_cmds, GlobalSkip),
+    rebar_log:log(debug, "Local skip_dep_cmds: ~p~n", [LocalSkip]),
+    lists:member(Command, LocalSkip).
