@@ -3,6 +3,14 @@
 This is an experimental plugin that re-implements https://github.com/basho/rebar/pull/73
 as a pure plugin, without changing the default deps behaviour in rebar itself.
 
+## Notices/Caveats
+
+This plugin relies on a feature which is currently sitting in the official 
+rebar repository as a pull request. Until this is merged, you will need to use
+[this fork of rebar](https://github.com/hyperthunk/rebar/tree/pub-cmd-alt-deps)
+in order to utilise the plugin. There is no guarantee that the pull request will
+be accepted, so this plugin will remain *experimental* until such time as it is.
+
 ## Usage
 
 Specify the commands for which you want to skip deps like so:
@@ -22,7 +30,8 @@ the commands you've configured to skip are being excluded.
     {skip_subdirs, ["rel"]}.
 ```
 
-## Important notes
+## Running the integration tests
 
-This plugin is highly experimental and based on rebar features that have not 
-made it into an official rebar branch (and may never do so).
+You can run the integration tests by issuing the following command:
+
+    $ ./rebar -C test.config get-deps compile retest -v
