@@ -25,7 +25,6 @@
 
 preprocess(Config, _) ->
     BaseDir = rebar_config:get_global(base_dir, undefined),
-    rebar_log:log(debug, "Preprocessing...~n", []),
     Command = rebar_utils:command_info(current),
     %% Set/Reset skip_deps if explicitly configured to do so
     case skip_deps_for_command(Command, Config) of
@@ -66,7 +65,6 @@ preprocess(Config, _) ->
     {ok, []}.
 
 postprocess(Config, _) ->
-    rebar_log:log(debug, "Postprocessing...~n", []),
     Command = rebar_utils:command_info(current),
     DepsDir = rebar_config:get_global(deps_dir, "deps"),
     %% Set/Reset skip_deps if explicitly configured to do so
@@ -91,8 +89,4 @@ skip_dir(F) ->
     rebar_core:skip_dir(F).
 
 skip_deps_for_command(Command, Config) ->
-    GlobalSkip = rebar_config:get(Config, skip_dep_cmds, []),
-    rebar_log:log(debug, "Global skip_dep_cmds: ~p~n", [GlobalSkip]),
-    LocalSkip = rebar_config:get_local(Config, skip_dep_cmds, GlobalSkip),
-    rebar_log:log(debug, "Local skip_dep_cmds: ~p~n", [LocalSkip]),
-    lists:member(Command, LocalSkip).
+    lists:member(Command, rebar_config:get(Config, skip_dep_cmds, [])).
