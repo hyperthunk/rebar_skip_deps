@@ -24,7 +24,6 @@
 -export([preprocess/2, postprocess/2]).
 
 preprocess(Config, _) ->
-    BaseDir = rebar_config:get_global(base_dir, undefined),
     Command = rebar_utils:command_info(current),
     %% Set/Reset skip_deps if explicitly configured to do so
     case skip_deps_for_command(Command, Config) of
