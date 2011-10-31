@@ -1,4 +1,4 @@
-# Rebar skip_deps Plugin
+# Rebar skip_deps Plugin [![travis](https://secure.travis-ci.org/hyperthunk/rebar_skip_deps.png)](http://travis-ci.org/hyperthunk/rebar_skip_deps)
 
 This is an experimental plugin that re-implements https://github.com/basho/rebar/pull/73
 as a pure plugin, without changing the default deps behaviour in rebar itself.
@@ -29,6 +29,14 @@ the commands you've configured to skip are being excluded.
     {skip_dep_cmds, [clean, create]}.
     {skip_subdirs, ["rel"]}.
 ```
+
+You can set up the plugin (and `skip_dep_cmds` config) in either your global
+(i.e., in `$HOME/.rebar/config`) or local config. Setting up the plugin in 
+global config will require that you install the plugin beams into either your
+`code:lib_dir` or a path listed in the `ERL_LIBS` environment variable, in order
+for the beams to get picked up by rebar. Projects which specify the plugin
+as a dependency (or use [remote_plugin_loader](https://github.com/hyperthunk/remote_plugin_loader))
+don't require this step.
 
 ## Running the integration tests
 
