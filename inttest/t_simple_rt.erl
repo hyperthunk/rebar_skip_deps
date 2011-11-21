@@ -3,7 +3,7 @@
 -compile(export_all).
 
 files() ->
-    [{copy, "../rebar", "rebar"},
+    [{copy, "../rebar", "simple/rebar"},
      {copy,
         "../examples/simple", "simple"},
      {copy, "rebar.config", "simple/rebar.config"}].
