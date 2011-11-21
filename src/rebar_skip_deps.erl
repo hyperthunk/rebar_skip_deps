@@ -24,7 +24,7 @@
 -export([preprocess/2, postprocess/2]).
 
 preprocess(Config, _) ->
-    Command = rebar_utils:command_info(current),
+    Command = rebar_plugin_manager:command_info(current),
     %% Set/Reset skip_deps if explicitly configured to do so
     case skip_deps_for_command(Command, Config) of
         true ->
@@ -64,7 +64,7 @@ preprocess(Config, _) ->
     {ok, []}.
 
 postprocess(Config, _) ->
-    Command = rebar_utils:command_info(current),
+    Command = rebar_plugin_manager:command_info(current),
     DepsDir = rebar_config:get_global(deps_dir, "deps"),
     %% Set/Reset skip_deps if explicitly configured to do so
     case skip_deps_for_command(Command, Config) of

@@ -3,15 +3,16 @@
 -compile(export_all).
 
 files() ->
-    [{copy,
+    [{copy, "../rebar", "rebar"},
+     {copy,
         "../examples/simple", "simple"},
      {copy, "rebar.config", "simple/rebar.config"}].
 
 run(_Dir) ->
-    {ok, _} = retest:sh("rebar get-deps compile -v", [{dir, "simple"}]),
+    {ok, _} = retest:sh("./rebar get-deps compile -v", [{dir, "simple"}]),
     true = filelib:is_regular("simple/deps/xml_writer/"
                                           "ebin/xml_writer.beam"),
-    {ok, _} = retest:sh("rebar clean -v", [{dir, "simple"}]),
+    {ok, _} = retest:sh("./rebar clean -v", [{dir, "simple"}]),
     true = filelib:is_regular("simple/deps/xml_writer/"
                                           "ebin/xml_writer.beam"),
     true = filelib:is_regular("simple/deps/hamcrest/"
