@@ -2,4 +2,4 @@ language: erlang
 otp_release:
    - R14B03
 before_script: "./rebar -C test.config get-deps compile"
-script: "./rebar -C test.config retest -v"
+script: "./rebar skip_deps=true -C test.config retest -v"
